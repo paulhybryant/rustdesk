@@ -879,8 +879,11 @@ class _FileManagerViewState extends State<FileManagerView> {
                               : MyTheme.accent,
                         ),
                       ),
-                      onPressed: () =>
-                          {webselectFiles(is_folder: isUploadFolder.value)},
+                      onPressed: () => {
+                            webselectFiles(
+                                is_folder: isUploadFolder.value,
+                                path: controller.directory.value.path)
+                          },
                       label: InkWell(
                         hoverColor: Colors.transparent,
                         splashColor: Colors.transparent,
@@ -911,7 +914,9 @@ class _FileManagerViewState extends State<FileManagerView> {
                             bind.mainSetLocalOption(
                                 key: 'upload-folder-button',
                                 value: value ? 'Y' : '');
-                            webselectFiles(is_folder: value);
+                            webselectFiles(
+                                is_folder: value,
+                                path: controller.directory.value.path);
                           }
                         },
                         child: Icon(Icons.arrow_drop_down),
@@ -1121,12 +1126,16 @@ class _FileManagerViewState extends State<FileManagerView> {
       },
       child: Obx(() {
         final entries = controller.directory.value.entries;
-        final filteredEntries = _searchText.isNotEmpty
-            ? entries.where((element) {
-                return element.name.contains(_searchText.value);
-              }).toList(growable: false)
-            : entries;
-        // Keep rows lazy so large directories only build visible list items.
+        final showHidden = controller.options.value.showHidden;
+        var filteredEntries = showHidden
+            ? entries
+            : entries.where((element) => !element.name.startsWith('.')).toList();
+        debugPrint("filteredEntries: showHidden=$showHidden, count=${filteredEntries.length}, names=${filteredEntries.map((e) => e.name).toList()}");
+        if (_searchText.isNotEmpty) {
+          filteredEntries = filteredEntries.where((element) {
+            return element.name.contains(_searchText.value);
+          }).toList(growable: false);
+        }
         final rows = filteredEntries.map((entry) {
           final sizeStr =
               entry.isFile ? readableFileSize(entry.size.toDouble()) : "";

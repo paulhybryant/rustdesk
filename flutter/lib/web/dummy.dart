@@ -1,4 +1,4 @@
-Future<void> webselectFiles({required bool is_folder}) async {
+Future<void> webselectFiles({required bool is_folder, required String path}) async {
   throw UnimplementedError("webselectFiles");
 }
 

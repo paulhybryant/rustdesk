@@ -283,7 +283,7 @@ class PlatformFFI {
     _eventCallback = fun;
   }
 
-  void setRgbaCallback(void Function(int, Uint8List) fun) async {}
+  void setRgbaCallback(String id, void Function(int, Uint8List) fun) async {}
 
   // web only, decoded WebCodecs frames arriving as ready-made images
   void setVideoFrameCallback(

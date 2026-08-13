@@ -120,6 +120,16 @@ class FileModel {
     fileFetcher.tryCompleteEmptyDirsTask(evt['value'], evt['is_local']);
   }
 
+  void receiveJobInit(Map<String, dynamic> evt) {
+    jobController.addWebJobInit(evt);
+  }
+
+  Future<void> onWebSessionReady() async {
+    debugPrint("FileModel.onWebSessionReady called! Waiting 1500ms for host CM...");
+    await Future.delayed(Duration(milliseconds: 1500));
+    await onReady();
+  }
+
   // This method fixes a deadlock that occurred when the previous code directly
   // called jobController.jobError(evt) in the job_error event handler.
   //
@@ -1041,6 +1051,42 @@ class JobController {
         _transferConflictRememberBatchId = null;
         _transferConflictRememberOverrideConfirm = null;
       }
+    }
+  }
+
+  void addWebJobInit(Map<String, dynamic> evt) {
+    try {
+      final isLocal = evt['is_local']?.toString() == 'true';
+      final val = evt['value'] is String
+          ? jsonDecode(evt['value'] as String) as Map<String, dynamic>
+          : evt['value'] as Map<String, dynamic>;
+      final id = int.parse(val['id'].toString());
+      final pathStr = val['path']?.toString() ?? '';
+      final entries = val['entries'] as List<dynamic>;
+
+      int totalSize = 0;
+      for (final entry in entries) {
+        totalSize += int.tryParse(entry['size']?.toString() ?? '0') ?? 0;
+      }
+
+      final index = getJob(id);
+      if (index == -1) {
+        final job = JobProgress()
+          ..type = JobType.transfer
+          ..fileName = entries.isNotEmpty ? (entries[0]['name']?.toString() ?? '') : ''
+          ..jobName = pathStr
+          ..totalSize = totalSize
+          ..fileCount = entries.length
+          ..state = JobState.inProgress
+          ..id = id
+          ..isRemoteToLocal = !isLocal;
+
+        jobTable.add(job);
+        registerTransferConflictBatch([id]);
+        debugPrint("Successfully registered web upload job: $id, files: ${entries.length}, size: $totalSize");
+      }
+    } catch (e) {
+      debugPrint("Failed to add web job init: $e");
     }
   }
 

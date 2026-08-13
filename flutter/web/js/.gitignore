@@ -1,0 +1,12 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+*log
+ogvjs
+.vscode
+.yarn
+src/gen_js_from_hbb.ts
+src/rendezvous.ts
+src/message.ts

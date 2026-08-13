@@ -379,6 +379,10 @@ class FfiModel with ChangeNotifier {
         parent.target?.fileModel.receiveFileDir(evt);
       } else if (name == 'empty_dirs') {
         parent.target?.fileModel.receiveEmptyDirs(evt);
+      } else if (name == 'web_session_ready') {
+        parent.target?.fileModel.onWebSessionReady();
+      } else if (name == 'job_init') {
+        parent.target?.fileModel.receiveJobInit(evt);
       } else if (name == 'job_progress') {
         parent.target?.fileModel.jobController.tryUpdateJobProgress(evt);
       } else if (name == 'job_done') {
@@ -1410,7 +1414,9 @@ class FfiModel with ChangeNotifier {
       virtualMouseMode.loadOptions();
     }
     if (connType == ConnType.fileTransfer) {
-      parent.target?.fileModel.onReady();
+      if (!isWeb) {
+        parent.target?.fileModel.onReady();
+      }
     } else if (connType == ConnType.terminal) {
       // Call onReady on all registered terminal models
       final models = parent.target?._terminalModels.values ?? [];
@@ -1592,7 +1598,12 @@ class FfiModel with ChangeNotifier {
 
   handleResolutions(String id, dynamic resolutions) {
     try {
-      final resolutionsObj = json.decode(resolutions as String);
+      dynamic resolutionsObj;
+      if (resolutions is String) {
+        resolutionsObj = json.decode(resolutions);
+      } else {
+        resolutionsObj = resolutions;
+      }
       late List<dynamic> dynamicArray;
       if (resolutionsObj is Map) {
         // The web version
@@ -3899,7 +3910,7 @@ class FFI {
     }
 
     if (isWeb) {
-      platformFFI.setRgbaCallback((int display, Uint8List data) {
+      platformFFI.setRgbaCallback(id, (int display, Uint8List data) {
         onEvent2UIRgba();
         imageModel.onRgba(display, data);
       });

@@ -6,6 +6,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide TabBarTheme;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/remote_page.dart';
@@ -849,6 +850,9 @@ void setMovable(bool isMainWindow, bool movable) {
 /// return true -> window will be maximize
 /// return false -> window will be unmaximize
 Future<bool> toggleMaximize(bool isMainWindow) async {
+  if (kIsWeb) {
+    return ffiGetByName('toggle_maximize') == 'true';
+  }
   if (isMainWindow) {
     if (await windowManager.isMaximized()) {
       windowManager.unmaximize();

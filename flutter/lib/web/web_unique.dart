@@ -2,9 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:js' as js;
 
-Future<void> webselectFiles({required bool is_folder}) async {
-  return Future(
-      () => js.context.callMethod('setByName', ['select_files', is_folder]));
+Future<void> webselectFiles({required bool is_folder, required String path}) async {
+  return Future(() => js.context.callMethod('setByName', [
+        'select_files',
+        jsonEncode({
+          'is_folder': is_folder,
+          'path': path,
+        })
+      ]));
 }
 
 Future<void> webSendLocalFiles(

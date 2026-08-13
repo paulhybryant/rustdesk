@@ -43,6 +43,8 @@ typedef HandleEvent = Future<void> Function(Map<String, dynamic> evt);
 class PlatformFFI {
   final _eventHandlers = <String, Map<String, HandleEvent>>{};
   final RustdeskImpl _ffiBind = RustdeskImpl();
+  void Function(Map<String, dynamic>)? _globalEventCallback;
+  final List<Map<String, dynamic>> _cachedEvents = [];
 
   static String getByName(String name, [String arg = '']) {
     return context.callMethod('getByName', [name, arg]);
@@ -159,10 +161,16 @@ class PlatformFFI {
       event.preventDefault();
     });
 
-    context['onRegisteredEvent'] = (String message) {
+    context['onRegisteredEvent'] = (String message) async {
       try {
         Map<String, dynamic> event = json.decode(message);
-        tryHandle(event);
+        if (!await tryHandle(event)) {
+          if (_globalEventCallback != null) {
+            _globalEventCallback!(event);
+          } else {
+            _cachedEvents.add(event);
+          }
+        }
       } catch (e) {
         print('json.decode fail(): $e');
       }
@@ -171,6 +179,7 @@ class PlatformFFI {
   }
 
   void setEventCallback(void Function(Map<String, dynamic>) fun) {
+    _globalEventCallback = fun;
     context["onGlobalEvent"] = (String message) {
       try {
         Map<String, dynamic> event = json.decode(message);
@@ -179,12 +188,38 @@ class PlatformFFI {
         print('json.decode fail(): $e');
       }
     };
+    for (var event in _cachedEvents) {
+      fun(event);
+    }
+    _cachedEvents.clear();
   }
 
-  void setRgbaCallback(void Function(int, Uint8List) fun) {
-    context["onRgba"] = (int display, Uint8List? rgba) {
-      if (rgba != null) {
-        fun(display, rgba);
+  final _rgbaCallbacks = <String, void Function(int, Uint8List)>{};
+
+  void setRgbaCallback(String id, void Function(int, Uint8List) fun) {
+    _rgbaCallbacks[id] = fun;
+    context["onRgba"] = (Object? peerId, Object? display, Object? rgba) {
+      if (rgba != null && peerId != null && display != null) {
+        final String? idStr = peerId is String ? peerId : peerId.toString();
+        final int? dispInt = display is int ? display : (display is num ? display.toInt() : null);
+        Uint8List? bytes;
+        if (rgba is Uint8List) {
+          bytes = rgba;
+        } else {
+          try {
+            final jsObj = rgba as JSObject;
+            final dartBuffer = jsObj.buffer.toDart;
+            bytes = dartBuffer.asUint8List(jsObj.byteOffset, jsObj.byteLength);
+          } catch (e) {
+            debugPrint("Failed to convert rgba argument to Uint8List: $e");
+          }
+        }
+        if (idStr != null && dispInt != null && bytes != null) {
+          final callback = _rgbaCallbacks[idStr];
+          if (callback != null) {
+            callback(dispInt, bytes);
+          }
+        }
       }
     };
   }
@@ -264,4 +299,10 @@ class PlatformFFI {
       fun(v);
     };
   }
+}
+
+extension on JSObject {
+  external JSArrayBuffer get buffer;
+  external int get byteOffset;
+  external int get byteLength;
 }

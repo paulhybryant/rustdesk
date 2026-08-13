@@ -811,7 +811,7 @@ class InputModel {
     }
 
     // * Currently mobile does not enable map mode
-    if ((isDesktop || isWebDesktop) && keyboardMode == kKeyMapMode) {
+    if (isDesktop && keyboardMode == kKeyMapMode) {
       mapKeyboardModeRaw(e, iosCapsLock);
     } else {
       legacyKeyboardModeRaw(e);
@@ -892,7 +892,6 @@ class InputModel {
         }
       }
     }
-
     // On some mobile soft-keyboard paths, Flutter may leave cached Shift state
     // set even though the current key event is not shifted anymore.
     if (e is KeyDownEvent &&
@@ -907,8 +906,7 @@ class InputModel {
       _releaseTrackedShiftKeyEventIfNeeded();
     }
 
-    final isDesktopAndMapMode =
-        isDesktop || (isWebDesktop && keyboardMode == kKeyMapMode);
+    final isDesktopAndMapMode = isDesktop || isWeb;
     if (isMobileAndMapMode || isDesktopAndMapMode) {
       // FIXME: e.character is wrong for dead keys, eg: ^ in de
       newKeyboardMode(
@@ -1017,9 +1015,16 @@ class InputModel {
 
   void sendKey(KeyEvent e, {bool? down, bool? press}) {
     // for maximum compatibility
-    final label = physicalKeyMap[e.physicalKey.usbHidUsage] ??
+    var label = physicalKeyMap[e.physicalKey.usbHidUsage] ??
         logicalKeyMap[e.logicalKey.keyId] ??
         e.logicalKey.keyLabel;
+    if (isWeb && e.logicalKey.keyLabel.length == 1) {
+      final code = e.logicalKey.keyLabel.codeUnitAt(0);
+      final isLetter = (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
+      if (!isLetter) {
+        label = e.logicalKey.keyLabel;
+      }
+    }
     inputKey(label, down: down, press: press ?? false);
   }
 

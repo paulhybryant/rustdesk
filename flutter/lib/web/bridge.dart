@@ -8,6 +8,8 @@ import 'dart:html' as html;
 
 import 'package:flutter_hbb/consts.dart';
 
+final Map<String, String> _mutableCommonMap = {};
+
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
@@ -927,13 +929,7 @@ class RustdeskImpl {
   }
 
   String mainGetInputSource({dynamic hint}) {
-    final inputSource =
-        js.context.callMethod('getByName', ['option:local', 'input-source']);
-    // // js grab mode
-    // export const CONFIG_INPUT_SOURCE_1 = "Input source 1";
-    // // flutter grab mode
-    // export const CONFIG_INPUT_SOURCE_2 = "Input source 2";
-    return inputSource != '' ? inputSource : 'Input source 1';
+    return 'Input source 2';
   }
 
   Future<void> mainSetInputSource(
@@ -1050,15 +1046,15 @@ class RustdeskImpl {
   }
 
   Future<void> mainLoadLanPeers({dynamic hint}) {
-    throw UnimplementedError("mainLoadLanPeers");
+    return Future.value();
   }
 
   Future<void> mainRemoveDiscovered({required String id, dynamic hint}) {
-    throw UnimplementedError("mainRemoveDiscovered");
+    return Future.value();
   }
 
   Future<void> mainChangeTheme({required String dark, dynamic hint}) {
-    throw UnimplementedError("mainChangeTheme");
+    return Future.value();
   }
 
   Future<void> mainChangeLanguage({required String lang, dynamic hint}) {
@@ -1128,11 +1124,11 @@ class RustdeskImpl {
 
   Future<void> cmHandleIncomingVoiceCall(
       {required int id, required bool accept, dynamic hint}) {
-    throw UnimplementedError("cmHandleIncomingVoiceCall");
+    return Future.value();
   }
 
   Future<void> cmCloseVoiceCall({required int id, dynamic hint}) {
-    throw UnimplementedError("cmCloseVoiceCall");
+    return Future.value();
   }
 
   Future<String> mainGetLastRemoteId({dynamic hint}) {
@@ -1160,15 +1156,15 @@ class RustdeskImpl {
   }
 
   Future<String> cmGetClientsState({dynamic hint}) {
-    throw UnimplementedError("cmGetClientsState");
+    return Future.value('[]');
   }
 
   Future<String?> cmCheckClientsLength({required int length, dynamic hint}) {
-    throw UnimplementedError("cmCheckClientsLength");
+    return Future.value(null);
   }
 
   Future<int> cmGetClientsLength({dynamic hint}) {
-    throw UnimplementedError("cmCheckClientsLength");
+    return Future.value(0);
   }
 
   Future<void> mainInit({required String appDir, dynamic hint}) {
@@ -1348,11 +1344,11 @@ class RustdeskImpl {
   }
 
   Future<void> mainCheckMouseTime({dynamic hint}) {
-    throw UnimplementedError("mainCheckMouseTime");
+    return Future.value();
   }
 
   Future<double> mainGetMouseTime({dynamic hint}) {
-    throw UnimplementedError("mainGetMouseTime");
+    return Future.value(0.0);
   }
 
   Future<void> mainWol({required String id, dynamic hint}) {
@@ -1378,20 +1374,20 @@ class RustdeskImpl {
   }
 
   Future<void> cmCloseConnection({required int connId, dynamic hint}) {
-    throw UnimplementedError("cmCloseConnection");
+    return Future.value();
   }
 
   Future<void> cmRemoveDisconnectedConnection(
       {required int connId, dynamic hint}) {
-    throw UnimplementedError("cmRemoveDisconnectedConnection");
+    return Future.value();
   }
 
   Future<void> cmCheckClickTime({required int connId, dynamic hint}) {
-    throw UnimplementedError("cmCheckClickTime");
+    return Future.value();
   }
 
   Future<double> cmGetClickTime({dynamic hint}) {
-    throw UnimplementedError("cmGetClickTime");
+    return Future.value(0.0);
   }
 
   Future<void> cmSwitchPermission(
@@ -1399,23 +1395,23 @@ class RustdeskImpl {
       required String name,
       required bool enabled,
       dynamic hint}) {
-    throw UnimplementedError("cmSwitchPermission");
+    return Future.value();
   }
 
   bool cmCanElevate({dynamic hint}) {
-    throw UnimplementedError("cmCanElevate");
+    return false;
   }
 
   Future<void> cmElevatePortable({required int connId, dynamic hint}) {
-    throw UnimplementedError("cmElevatePortable");
+    return Future.value();
   }
 
   Future<void> cmSwitchBack({required int connId, dynamic hint}) {
-    throw UnimplementedError("cmSwitchBack");
+    return Future.value();
   }
 
   Future<String> cmGetConfig({required String name, dynamic hint}) {
-    throw UnimplementedError("cmGetConfig");
+    return Future.value("");
   }
 
   Future<String> mainGetBuildDate({dynamic hint}) {
@@ -1662,7 +1658,6 @@ class RustdeskImpl {
 
   String mainSupportedInputSource({dynamic hint}) {
     return jsonEncode([
-      ['Input source 1', 'input_source_1_tip'],
       ['Input source 2', 'input_source_2_tip']
     ]);
   }
@@ -1824,17 +1819,24 @@ class RustdeskImpl {
     throw UnimplementedError("sessionPrinterResponse");
   }
 
+  static int _transferJobIdCounter = 0;
+
   Future<String> mainGetCommon({required String key, dynamic hint}) {
-    throw UnimplementedError("mainGetCommon");
+    return Future.value(mainGetCommonSync(key: key));
   }
 
   String mainGetCommonSync({required String key, dynamic hint}) {
-    throw UnimplementedError("mainGetCommonSync");
+    if (key == 'transfer-job-id') {
+      _transferJobIdCounter++;
+      return _transferJobIdCounter.toString();
+    }
+    return _mutableCommonMap[key] ?? '';
   }
 
   Future<void> mainSetCommon(
       {required String key, required String value, dynamic hint}) {
-    throw UnimplementedError("mainSetCommon");
+    _mutableCommonMap[key] = value;
+    return Future.value();
   }
 
   Future<String> sessionHandleScreenshot(
